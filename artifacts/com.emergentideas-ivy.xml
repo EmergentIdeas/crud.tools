@@ -1,0 +1,21 @@
+<ivy-module version="2.0">
+    <info organisation="com.emergentideas" module="crud_tools" revision="1.0.0.1" status="integration" publication="20130122041529"/>
+    <configurations defaultconf="build" defaultconfmapping="build->*;deployment->default;test->default">
+    	<conf name="build"/>
+    	<conf name="deployment"/>
+    	<conf name="appdep"/>
+    	<conf name="test"/>
+    </configurations>
+    <publications>
+    	<artifact name="crud_tools" type="jar" conf="appdep"/>
+    </publications>
+    <dependencies>
+    	<dependency org="com.emergentideas" name="webhandle" rev="1.0.0.5" revConstraint="1.0.0.+" conf="build"/>	
+    	
+    	
+    	<!-- For testing code -->
+		<dependency org="org.mockito" name="mockito-all" rev="1.9.5-rc1" conf="test"/>
+		<dependency org="junit" name="junit" rev="4.10" conf="test"/>
+    	
+    </dependencies>
+</ivy-module>
