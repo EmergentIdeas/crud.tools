@@ -5,9 +5,12 @@
     	<conf name="deployment" />
     	<conf name="appdep" />
     	<conf name="test" />
+    	<conf name="sources" />
+    	<conf name="empty" />
     </configurations>
     <publications>
     	<artifact name="crud_tools" type="jar" conf="appdep"/>
+    	<artifact name="crud_tools-sources" type="source" ext="jar" conf="sources"/>
     </publications>
     <dependencies>
     	<dependency org="com.emergentideas" name="webhandle" rev="1.0.0.+" conf="build" />	

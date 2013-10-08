@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Path;
 
 import com.emergentideas.logging.Logger;
 import com.emergentideas.logging.SystemOutLogger;
@@ -25,7 +26,7 @@ import com.emergentideas.webhandle.output.Show;
 import com.emergentideas.webhandle.output.Template;
 import com.emergentideas.webhandle.output.Wrap;
 
-public class CRUDHandle<T> {
+public abstract class CRUDHandle<T> {
 	
 	protected EntityManager entityManager;
 	protected Class<?> entityType;
@@ -39,18 +40,24 @@ public class CRUDHandle<T> {
 
 		if(validateCreate(focus, messages)) {
 			entityManager.persist(focus);
-			return new Show(getUrlPrefix() + "/list");
+			return new Show(getPostCreateURL(context, focus, location, messages));
 		}
 		
 		location.add(focus);
+		addAssociatedData(context, focus, location);
 		return getTemplatePrefix() + "create";
 	}
 
+	protected String getPostCreateURL(InvocationContext context, T focus, Location location, RequestMessages messages) {
+		return getUrlPrefix() + "/list";
+	}
+	
 	
 	@Handle(value = "/create", method = HttpMethod.GET)
 	@Template
 	@Wrap("app_page")
 	public Object createGet(InvocationContext context, User user, Location location) {
+		addAssociatedData(context, null, location);
 		return getTemplatePrefix() + "create";
 	}
 	
@@ -60,6 +67,7 @@ public class CRUDHandle<T> {
 	public Object editGet(InvocationContext context, User user, Integer id, Location location) {
 		Object entity = entityManager.find(getEntityClass(), id);
 		location.add(entity);
+		addAssociatedData(context, (T)entity, location);
 		return getTemplatePrefix() + "edit";
 	}
 	
@@ -68,19 +76,44 @@ public class CRUDHandle<T> {
 	@Wrap("app_page")
 	public Object editPost(InvocationContext context, User user, @Db("id") @Inject T focus, Location location, RequestMessages messages) {
 		if(validateEdit(focus, messages)) {
-			return new Show("list");
+			return new Show(getPostEditURL(context, focus, location, messages));
 		}
 		entityManager.detach(focus);
 		location.add(focus);
+		addAssociatedData(context, focus, location);
 		return getTemplatePrefix() + "edit";
+	}
+	
+	protected String getPostEditURL(InvocationContext context, T focus, Location location, RequestMessages messages) {
+		return "list";
 	}
 	
 	@Handle(value = "/{id:\\d+}/delete", method = HttpMethod.POST)
 	@Template
 	@Wrap("app_page")
 	public Object deletePost(InvocationContext context, User user, @Db("id") T focus, Location location, RequestMessages messages) {
+		deleteTheObject(context, user, focus);
+		return new Show(getPostDeleteURL(context, focus, location, messages));
+	}
+	
+	/**
+	 * Adds information to the location object need to show the create or edit screens. These are usually objects that can
+	 * be selected from a list. For example, if a new order is being created, a list of current customers might be added
+	 * to the location by this method.
+	 * @param context
+	 * @param focus
+	 * @param location
+	 */
+	protected void addAssociatedData(InvocationContext context, T focus, Location location) {
+		
+	}
+	
+	protected String getPostDeleteURL(InvocationContext context, T focus, Location location, RequestMessages messages) {
+		return getUrlPrefix() + "/list";
+	}
+	
+	public void deleteTheObject(InvocationContext context, User user, T focus) {
 		entityManager.remove(focus);
-		return new Show(getUrlPrefix() + "/list");
 	}
 	
 	@Handle(value = {"/list", "", "/"}, method = HttpMethod.GET)
@@ -104,7 +137,7 @@ public class CRUDHandle<T> {
 	 * @param all
 	 * @return The list passed if it was sorted in place or a new list if a new one was created.
 	 */
-	protected List<T> sortEntities(List<T> all) {
+	public List<T> sortEntities(List<T> all) {
 		return all;
 	}
 	
@@ -115,7 +148,7 @@ public class CRUDHandle<T> {
 	 * @return
 	 */
 	@SuppressWarnings(value = "unchecked")
-	protected List<T> findEntitiesToShow(InvocationContext context, User user, HttpServletRequest request) {
+	public List<T> findEntitiesToShow(InvocationContext context, User user, HttpServletRequest request) {
 		return entityManager.createQuery("select r from " + getEntityShortName() + " r").getResultList();
 	}
 	
@@ -124,7 +157,7 @@ public class CRUDHandle<T> {
 	 * @param all All of the entities to show
 	 * @return
 	 */
-	protected TableDataModel createDataTable(List<T> all) {
+	public TableDataModel createDataTable(List<T> all) {
 		List<String> propertyNames = determinePropertyNames();
 		List<String> headers = determinePropertyLabels(propertyNames);
 		
@@ -170,7 +203,7 @@ public class CRUDHandle<T> {
 	 * @param allEntities
 	 * @param table
 	 */
-	protected void modifyDataTable(List<T> allEntities, TableDataModel table) {
+	public void modifyDataTable(List<T> allEntities, TableDataModel table) {
 		
 	}
 
@@ -180,7 +213,7 @@ public class CRUDHandle<T> {
 	 * @param messages
 	 * @return
 	 */
-	protected boolean validateEdit(T focus, RequestMessages messages) {
+	public boolean validateEdit(T focus, RequestMessages messages) {
 		return true;
 	}
 	
@@ -190,11 +223,11 @@ public class CRUDHandle<T> {
 	 * @param messages
 	 * @return
 	 */
-	protected boolean validateCreate(T focus, RequestMessages messages) {
+	public boolean validateCreate(T focus, RequestMessages messages) {
 		return true;
 	}
 	
-	protected Class<?> getEntityClass() {
+	public Class<?> getEntityClass() {
 		if(entityType == null) {
 			entityType = (Class<?>)((ParameterizedType)getClass().getGenericSuperclass()).getActualTypeArguments()[0];
 		}
@@ -202,7 +235,7 @@ public class CRUDHandle<T> {
 	}
 	
 	
-	protected String getEntityShortName() {
+	public String getEntityShortName() {
 		String name = getEntityClass().getName();
 		name = name.substring(name.lastIndexOf('.') + 1);
 		return name;
@@ -213,17 +246,40 @@ public class CRUDHandle<T> {
 	 * string of the value attribute of this class's {@link Handle} attribute.
 	 * @return
 	 */
-	protected String getUrlPrefix() {
+	public String getUrlPrefix() {
 		Handle h = ReflectionUtils.getAnnotationOnClass(getClass(), Handle.class);
 		if(h != null) {
 			return h.value()[0];
 		}
+		Path p = ReflectionUtils.getAnnotationOnClass(getClass(), Path.class);
+		if(p != null) {
+			return p.value();
+		}
+		
 		return "";
 	}
 	
-	protected String getTemplatePrefix() {
-		return "";
+	/**
+	 * Truncates the list to be the cut list. Returns the list that is truncated (the one passed in).
+	 * @param l The list to truncate
+	 * @param cutLength The length of the list after it has been truncated
+	 */
+	protected <T> List<T> cutAfter(List<T> l, int cutLength) {
+		while(l.size() > cutLength) {
+			l.remove(cutLength);
+		}
+		
+		return l;
 	}
+
+	
+	/**
+	 * Defines the template prefix for the create, edit, and list templates. A value here might be
+	 * "/people/contacts/" which will be prefixed to the string "edit" to come up with the template
+	 * name
+	 * @return
+	 */
+	public abstract String getTemplatePrefix();
 
 	public EntityManager getEntityManager() {
 		return entityManager;

@@ -1,4 +1,4 @@
-<project xmlns:ivy="antlib:org.apache.ivy.ant" name="crud_tools" default="pub" basedir=".">
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="crud_tools" default="compile" basedir=".">
 	<description>
         a build for webhandle crud tools
     </description>
@@ -11,7 +11,7 @@
 	<property name="artifacts" location="artifacts" />
 	<property name="app.package.root" value="com/emergentideas/webhandle/apps/oak/crudtools" />
 	<property name="organisation" value="com.emergentideas" />
-	
+
 	<ivy:settings file="crud_settings.xml" />
 
 
@@ -32,7 +32,7 @@
 	</target>
 
 	<target name="compile" depends="init" description="compile the source " >
-		
+
 		<ivy:cachepath pathid="ivy.cachepath.dep" conf="deployment"/>
 		<ivy:cachepath pathid="ivy.cachepath.build" conf="build"/>
 
@@ -54,7 +54,7 @@
 				<exclude name="**/*.java" />
 			</fileset>
 		</copy>
-		
+
 		<copy todir="${dist}/${app.package.root}/templates">
 			<fileset dir="${templates}" >
 			</fileset>
@@ -68,11 +68,18 @@
 			</fileset>
 		</copy>
 	</target>
-	
-	<target name="pub" depends="compile" >
+
+	<target name="delcache">
+		<ivy:cachepath pathid="ivy.cachepath.dne" conf="empty" />
+		<echo message="deleting cache dir: ${ivy.cache.dir}/${organisation}/${ant.project.name}"></echo>
+		<delete dir="${ivy.cache.dir}/${organisation}/${ant.project.name}" />
+	</target>
+
+	<target name="pub" depends="compile">
 		<delete dir="${artifacts}"/>
 		<mkdir dir="${artifacts}" />
 		<jar jarfile="${artifacts}/${organisation}-${ant.project.name}.jar" basedir="${dist}"/>
+		<jar jarfile="${artifacts}/${organisation}-${ant.project.name}-sources.jar" basedir="${src}"/>
 		<ivy:publish resolver="eico_local" pubrevision="1.0.0.${build.number}" update="true" overwrite="true" organisation="${organisation}">
 			<artifacts pattern="${artifacts}/[organisation]-[artifact].[ext]" />
 		</ivy:publish>
