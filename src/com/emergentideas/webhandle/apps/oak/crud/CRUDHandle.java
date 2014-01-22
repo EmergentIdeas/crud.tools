@@ -78,9 +78,9 @@ public abstract class CRUDHandle<T> {
 		if(validateEdit(focus, messages)) {
 			return new Show(getPostEditURL(context, focus, location, messages));
 		}
-		entityManager.detach(focus);
 		location.add(focus);
 		addAssociatedData(context, focus, location);
+		entityManager.detach(focus);
 		return getTemplatePrefix() + "edit";
 	}
 	
