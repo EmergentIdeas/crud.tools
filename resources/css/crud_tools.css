@@ -14,3 +14,27 @@ visibility: hidden;
 visibility: visible;
 }
 
+.blank-button {
+	background: none;
+	border: none;
+	padding: .25em;
+	margin: none;
+}
+
+.table-tile {
+	margin-bottom: 1.5em;
+}
+.tile-options {
+	display: inline-block;
+	vertical-align: top;
+}
+
+.tile-data {
+	display:inline-block;
+	vertical-align: top;
+	padding-left: 1.5em;
+}
+
+.no-show-sort-icon {
+	display: none;
+}

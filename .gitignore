@@ -2,3 +2,7 @@ dist
 artifacts
 bin
 *~
+WEB-INF
+ivylibs
+db
+jetty

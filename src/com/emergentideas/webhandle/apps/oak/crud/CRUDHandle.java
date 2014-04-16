@@ -22,6 +22,7 @@ import com.emergentideas.webhandle.assumptions.oak.interfaces.User;
 import com.emergentideas.webhandle.composites.db.Db;
 import com.emergentideas.webhandle.handlers.Handle;
 import com.emergentideas.webhandle.handlers.HttpMethod;
+import com.emergentideas.webhandle.output.DirectRespondent;
 import com.emergentideas.webhandle.output.Show;
 import com.emergentideas.webhandle.output.Template;
 import com.emergentideas.webhandle.output.Wrap;
@@ -95,7 +96,34 @@ public abstract class CRUDHandle<T> {
 		deleteTheObject(context, user, focus);
 		return new Show(getPostDeleteURL(context, focus, location, messages));
 	}
+
+	@Handle(value = "/sort", method = HttpMethod.POST)
+	@Template
+	@Wrap("app_page")
+	public Object sortRows(InvocationContext context, User user, String[] order, Location location) {
+		int place = 0;
+		for(String itemId : order) {
+			T entity = (T)entityManager.find(getEntityClass(), transformId(itemId));
+			setOrder(entity, place++);
+		}
+		
+		return new DirectRespondent(null, 200, null);
+	}
 	
+	protected Object transformId(String id) {
+		return Integer.parseInt(id);
+	}
+	
+	/**
+	 * You must override this method if you're using the sorted items mode. This method
+	 * sets the order (however that's done) for a given entity. The order is 0 based.
+	 * @param entity
+	 * @param order
+	 */
+	protected void setOrder(T entity, int order) {
+		
+	}
+
 	/**
 	 * Adds information to the location object need to show the create or edit screens. These are usually objects that can
 	 * be selected from a list. For example, if a new order is being created, a list of current customers might be added
@@ -128,8 +156,26 @@ public abstract class CRUDHandle<T> {
 		TableDataModel table = createDataTable(all);
 	
 		location.put("table", table);
+		location.put("tileTemplate", getTileTemplate());
+		location.put("tileDataTemplate", getTileDataTemplate());
 
 		return getTemplatePrefix() + "list";
+	}
+	
+	/**
+	 * Returns the template name to use to render a tile for the row
+	 * @return
+	 */
+	protected String getTileTemplate() {
+		return "dataTables/tile";
+	}
+	
+	/**
+	 * Returns the template name to use to render just the data for a given tile
+	 * @return
+	 */
+	protected String getTileDataTemplate() {
+		return "dataTables/tile-data";
 	}
 	
 	/**
@@ -149,7 +195,16 @@ public abstract class CRUDHandle<T> {
 	 */
 	@SuppressWarnings(value = "unchecked")
 	public List<T> findEntitiesToShow(InvocationContext context, User user, HttpServletRequest request) {
-		return entityManager.createQuery("select r from " + getEntityShortName() + " r").getResultList();
+		return entityManager.createQuery("select r from " + getEntityShortName() + " r " + getOrderByString()).getResultList();
+	}
+	
+	/**
+	 * You must override this method if you're using the sorted mode. This method adds a query predicate to sort the
+	 * items in the way they should initially be ordered.
+	 * @return
+	 */
+	protected String getOrderByString() {
+		return "";
 	}
 	
 	/**
@@ -173,6 +228,7 @@ public abstract class CRUDHandle<T> {
 		.setDeleteURLPattern(prefix, idProperty, "/delete")
 		.setEditURLPattern(0, prefix, idProperty, "")
 		.setCreateNewURL(prefix + "create")
+		.setSortURL(prefix + "sort")
 		.setItems(all.toArray());
 		
 		modifyDataTable(all, table);

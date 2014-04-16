@@ -1,0 +1,5 @@
+<div class="sortable-tiles">
+<form class="sort-form" method="post" action="__sortURL__"></form>
+__rows::$tileTemplate__	
+</div>
+__createNewURL::dataTables/newURLLink__

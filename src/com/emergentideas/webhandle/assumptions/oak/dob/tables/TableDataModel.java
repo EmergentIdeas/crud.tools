@@ -23,7 +23,7 @@ public class TableDataModel {
 	protected String defaultTemplateName = "esc";
 	
 	protected String createNewURL;
-	
+	protected String sortURL;
 	
 	// the pattern for the edit url
 	protected int columnToLink = -1;
@@ -140,6 +140,15 @@ public class TableDataModel {
 	}
 	
 	
+	public String getSortURL() {
+		return sortURL;
+	}
+	
+	public TableDataModel setSortURL(String sortURL) {
+		this.sortURL = sortURL;
+		return this;
+	}
+
 	public String getCreateNewURL() {
 		return createNewURL;
 	}
@@ -177,11 +186,10 @@ public class TableDataModel {
 		return defaultTemplateName;
 	}
 
-	
 	public class Row {
 		protected List<Object> values;
 		protected Object focus;
-
+		
 		public Row() {
 			values = new ArrayList<Object>();
 		}
@@ -202,6 +210,10 @@ public class TableDataModel {
 		public String getDeleteURL() {
 			return createDeleteURL(focus);
 		}
+		
+		public String getClickURL() {
+			return createClickURL(focus);
+		}
 
 		public Object getFocus() {
 			return focus;
@@ -211,10 +223,14 @@ public class TableDataModel {
 			this.focus = focus;
 			return this;
 		}
-
 		
-	}
-	
+		public Object getRowId() {
+			AppLocation loc = new AppLocation();
+			loc.add(focus);
+			return loc.get(editIdProperty);
+		}
+
+	}	
 	public class Cell {
 		protected Object value;
 		protected String clickURL;

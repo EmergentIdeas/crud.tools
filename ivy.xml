@@ -16,6 +16,11 @@
     	<dependency org="com.emergentideas" name="webhandle" rev="1.0.0.+" conf="build" />	
     	
     	
+        <!-- For the test app -->
+                <dependency org="com.emergentideas" name="page-editor" rev="latest.integration" conf="test->appdep"/>
+                <dependency org="com.emergentideas" name="oak_stdtemplates" rev="[1.0,)" conf="test->appdep" />
+                <dependency org="org.hsqldb" name="hsqldb" rev="2.3.1" conf="test->default"/>
+
     	<!-- For testing code -->
 		<dependency org="org.mockito" name="mockito-all" rev="1.9.5-rc1" conf="test"/>
 		<dependency org="junit" name="junit" rev="4.10" conf="test" />

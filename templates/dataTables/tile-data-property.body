@@ -1,0 +1,4 @@
+<div class="tile-data-property">
+<span class="tile-data-property-label">__label__<span class="colon">:</span></span>
+<span class="tile-data-property-value">__$this::$templateName__</span>
+</div>

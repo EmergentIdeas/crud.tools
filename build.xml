@@ -12,6 +12,16 @@
 	<property name="app.package.root" value="com/emergentideas/webhandle/apps/oak/crudtools" />
 	<property name="organisation" value="com.emergentideas" />
 
+        <!-- directories for the test app -->
+        <property name="webinf" location="WEB-INF" />
+        <property name="whlibs" location="WEB-INF/lib" />
+        <property name="jetty" location="jetty" />
+        <property name="testAppBin" location="testAppBin" />
+        <property name="testSrc" location="test-src" />
+        <property name="lib" location="lib" />
+        <property name="ivylibs" location="ivylibs" />
+
+
 	<ivy:settings file="crud_settings.xml" />
 
 
@@ -30,6 +40,36 @@
 		<mkdir dir="${resources}" />
 		<mkdir dir="${configuration}" />
 	</target>
+
+        <target name="compile-test" depends="init" description="compile the test app source" >
+
+                <ivy:cachepath pathid="ivy.cachepath.dep" conf="appdep"/>
+                <ivy:cachepath pathid="ivy.cachepath.test" conf="test"/>
+                <ivy:cachepath pathid="ivy.cachepath.build" conf="build"/>
+
+                <!-- use the ivy dependencies as well as the jars in the ${lib} directory -->
+                <path id="ivy.deps">
+                        <path refid="ivy.cachepath.dep" />
+                        <path refid="ivy.cachepath.test" />
+                        <path refid="ivy.cachepath.build" />
+                        <fileset dir="${lib}" >
+                                <include name="*.jar"/>
+                        </fileset>
+                        <path location="${dist}" />
+                </path>
+
+                <!-- Compile the java code from ${src} into ${dist} -->
+                <javac nowarn="on" srcdir="${testSrc}" destdir="${testAppBin}" target="1.6" source="1.6" debug="true" debuglevel="lines,vars,source">
+                        <classpath refid="ivy.deps" />
+                </javac>
+
+                <!-- copy properties and other non-java files (like .properties) from the src directory -->
+                <copy todir="${testAppBin}">
+                        <fileset dir="${testSrc}" >
+                                <exclude name="**/*.java" />
+                        </fileset>
+                </copy>
+        </target>
 
 	<target name="compile" depends="init" description="compile the source " >
 
@@ -86,10 +126,54 @@
 
 	</target>
 
+        <!-- targets to build and run the test-app -->
+        <target name="prep" depends="compile" >
+                <ivy:retrieve pattern="${ivylibs}/[artifact](-[classifier])-[revision].jar" type="jar" conf="appdep"/>
+        </target>
+
+        <target name="test-prep" >
+                <ivy:retrieve pattern="${ivylibs}/[artifact](-[classifier])-[revision].jar" type="jar" conf="appdep"/>
+                <ivy:retrieve pattern="${ivylibs}/[artifact](-[classifier])-[revision].jar" type="jar" conf="test"/>
+        </target>
+
+        <target name="jetty-found" >
+                <available file="${jetty}/jetty-runner.jar"  property="jetty.found"/>
+        </target>
+
+        <target name="jetty-download" unless="jetty.found">
+                <get dest="${jetty}/jetty-runner.jar" src="http://repo2.maven.org/maven2/org/mortbay/jetty/jetty-runner/8.1.9.v20130131/jetty-runner-8.1.9.v20130131.jar"/>
+        </target>
+
+        <target name="jetty" depends="prep,jetty-found,jetty-download" >
+                <ivy:retrieve pattern="${whlibs}/[artifact](-[classifier])-[revision].jar" type="jar" conf="build"/>
+                <copy file="web.xml" todir="${webinf}">
+                </copy>
+        </target>
+
+        <target name="test-app-prep" depends="jetty,test-prep,compile-test">
+        </target>
+
+        <target name="run" >
+                <exec executable="java">
+                        <arg value="-jar"/>
+                        <arg value="jetty/jetty-runner.jar"/>
+                        <arg value="."/>
+                </exec>
+        </target>
+        <target name="debug" >
+                <exec executable="java">
+                        <arg value="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000"/>
+                        <arg value="-jar"/>
+                        <arg value="jetty/jetty-runner.jar"/>
+                        <arg value="."/>
+                </exec>
+        </target>
 
 
 	<target name="clean" description="clean up" >
 		<delete dir="${dist}"/>
 		<delete dir="${artifacts}"/>
+		<delete dir="${ivylibs}"/>
+
 	</target>
 </project>

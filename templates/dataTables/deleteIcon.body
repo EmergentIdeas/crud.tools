@@ -1,0 +1,1 @@
+<form method="post" action="__$this__"><button class="blank-button" type="submit" onclick="return confirm('OK to delete?');">&times;</button></form>
