@@ -211,7 +211,7 @@ public class TableDataModel {
 			return createDeleteURL(focus);
 		}
 		
-		public String getClickURL() {
+		public String getRowClickURL() {
 			return createClickURL(focus);
 		}
 

@@ -1,6 +1,6 @@
 <div class="table-tile" data-id="__rowId__">
 	<div class="tile-options">
-	__clickURL::dataTables/editIcon__
+	__rowClickURL::dataTables/editIcon__
 	__deleteURL::dataTables/deleteIcon__
 	<span class="no-show-sort-icon"><span class="glyphicon glyphicon-resize-vertical sort-handle"></span></span>
 	</div><div class="tile-data">
