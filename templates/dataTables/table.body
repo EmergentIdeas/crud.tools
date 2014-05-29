@@ -9,4 +9,5 @@
 		__rows::dataTables/tr__	
 	</tbody>
 </table>
+__pageNumber??$this::dataTables/paging-information__
 __createNewURL::dataTables/newURLLink__

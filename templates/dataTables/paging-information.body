@@ -1,0 +1,13 @@
+<div class="paging-information">
+	pages 
+	__hasPreviousPage??$this::dataTables/previous-page-link__
+	__pageNumber - 2 >= 0??pageNumber - 2::dataTables/numbered-page-link__
+	__pageNumber - 1 >= 0??pageNumber - 1::dataTables/numbered-page-link__
+	<span class="current-page-pagination" >__pageNumber__</span> 
+	__hasNextPage??pageNumber + 1::dataTables/numbered-page-link__
+	__hasNextPage??$this::dataTables/next-page-link__
+	
+	<span class="pagination-devider">|</span> 
+	<span class="showing-pagination-info">showing</span> <span class="pagination-from">__fromRow__</span> to 
+	<span class="pagination-to">__toRow__</span> of <span class="pagination-total">__totalRows__</span>
+</div>

@@ -38,3 +38,7 @@ visibility: visible;
 .no-show-sort-icon {
 	display: none;
 }
+
+.paging-information {
+	text-align: right;
+}

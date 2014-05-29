@@ -3,9 +3,13 @@ package com.emergentideas.webhandle.apps.oak.crud;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
 
+import javax.annotation.Resource;
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Path;
+
+import org.apache.commons.lang.StringUtils;
 
 import com.emergentideas.logging.Logger;
 import com.emergentideas.logging.SystemOutLogger;
@@ -20,6 +24,7 @@ import com.emergentideas.webhandle.assumptions.oak.RequestMessages;
 import com.emergentideas.webhandle.assumptions.oak.dob.tables.TableDataModel;
 import com.emergentideas.webhandle.assumptions.oak.interfaces.User;
 import com.emergentideas.webhandle.composites.db.Db;
+import com.emergentideas.webhandle.eventbus.EventBus;
 import com.emergentideas.webhandle.handlers.Handle;
 import com.emergentideas.webhandle.handlers.HttpMethod;
 import com.emergentideas.webhandle.output.DirectRespondent;
@@ -29,10 +34,15 @@ import com.emergentideas.webhandle.output.Wrap;
 
 public abstract class CRUDHandle<T> {
 	
+	@Resource
+	protected EventBus applicationEventBus;
+	
 	protected EntityManager entityManager;
 	protected Class<?> entityType;
 	protected Logger log = SystemOutLogger.get(getClass());
 
+	protected boolean paginateByDefault = false;
+	protected Integer defaultPageSize = 100;
 
 	@Handle(value = "/create", method = HttpMethod.POST)
 	@Template
@@ -41,6 +51,9 @@ public abstract class CRUDHandle<T> {
 
 		if(validateCreate(focus, messages)) {
 			entityManager.persist(focus);
+			if(applicationEventBus != null) {
+				applicationEventBus.emit("/object/create", focus);
+			}
 			return new Show(getPostCreateURL(context, focus, location, messages));
 		}
 		
@@ -77,6 +90,10 @@ public abstract class CRUDHandle<T> {
 	@Wrap("app_page")
 	public Object editPost(InvocationContext context, User user, @Db("id") @Inject T focus, Location location, RequestMessages messages) {
 		if(validateEdit(focus, messages)) {
+			if(applicationEventBus != null) {
+				applicationEventBus.emit("/object/update", focus);
+			}
+
 			return new Show(getPostEditURL(context, focus, location, messages));
 		}
 		location.add(focus);
@@ -93,6 +110,10 @@ public abstract class CRUDHandle<T> {
 	@Template
 	@Wrap("app_page")
 	public Object deletePost(InvocationContext context, User user, @Db("id") T focus, Location location, RequestMessages messages) {
+		if(applicationEventBus != null) {
+			applicationEventBus.emit("/object/delete", focus);
+		}
+
 		deleteTheObject(context, user, focus);
 		return new Show(getPostDeleteURL(context, focus, location, messages));
 	}
@@ -195,7 +216,75 @@ public abstract class CRUDHandle<T> {
 	 */
 	@SuppressWarnings(value = "unchecked")
 	public List<T> findEntitiesToShow(InvocationContext context, User user, HttpServletRequest request) {
-		return entityManager.createQuery("select r from " + getEntityShortName() + " r " + getOrderByString()).getResultList();
+		
+		Query q = createQueryAddingPredicate(context, user, request, "select r from " + getEntityShortName() + " r", true); 
+		configureQueryForPageNumber(context, user, request, q);
+		
+		return q.getResultList();
+	}
+	
+	protected Query createQueryAddingPredicate(InvocationContext context, User user, HttpServletRequest request, String queryString, boolean useOrderBy) {
+		Query q = entityManager.createQuery(queryString + getOrderByString()); 
+		return q;
+	}
+	
+	protected void configureQueryForPageNumber(InvocationContext context, User user, HttpServletRequest request, Query q) {
+		Location location = context.getLocation();
+		
+		String pageSize = request.getParameter("pageSize");
+		String pageNumber = request.getParameter("pageNumber");
+		
+		Integer iPageNumber = null;
+		Integer iPageSize = defaultPageSize;
+		
+		if(StringUtils.isNotBlank(pageNumber)) {
+			iPageNumber = Integer.parseInt(pageNumber);
+		}
+		
+		if(StringUtils.isNotBlank(pageSize)) {
+			iPageSize = Integer.parseInt(pageSize);
+		}
+		
+		if(iPageNumber == null && isPaginateByDefault()) {
+			iPageNumber = 0;
+		}
+		
+		if(iPageNumber != null) {
+			q.setFirstResult(iPageNumber * iPageSize);
+			q.setMaxResults(iPageSize);
+			long total = getTotalCountOfObjects(context, user, request);
+			addPageCountData(request, location, iPageNumber, iPageSize, total);
+		}
+	}
+	
+	protected long getTotalCountOfObjects(InvocationContext context, User user, HttpServletRequest request) {
+		
+		return (Long)createQueryAddingPredicate(context, user, request, "select count(r) from " + getEntityShortName() + " r", false).getSingleResult();
+	}
+	
+	protected void addPageCountData(HttpServletRequest request, Location location, Integer pageNumber, Integer pageSize, Long total) {
+		location.put("pageNumber", pageNumber);
+		location.put("pageSize", pageSize);
+		location.put("totalRows", total);
+		location.put("fromRow", pageNumber * pageSize);
+		
+		Integer toRow = (pageNumber + 1) * pageSize;
+		if(toRow > total) {
+			toRow = (int)total.longValue();
+		}
+		location.put("toRow", toRow);
+		
+		String searchPredicate = getNextPageSearchUrlAddition(request, location);
+		
+		location.put("pageChangePrefix", getUrlPrefix() + "/list?" + 
+		(StringUtils.isBlank(searchPredicate) ? "" : searchPredicate + "&") + "pageSize=" + pageSize + "&pageNumber=");
+		location.put("hasPreviousPage", pageNumber > 0);
+		location.put("hasNextPage", total > ((pageNumber + 1) * pageSize));
+		
+	}
+	
+	protected String getNextPageSearchUrlAddition(HttpServletRequest request, Location location) {
+		return null;
 	}
 	
 	/**
@@ -344,6 +433,10 @@ public abstract class CRUDHandle<T> {
 	@Wire
 	public void setEntityManager(EntityManager entityManager) {
 		this.entityManager = entityManager;
+	}
+	
+	public boolean isPaginateByDefault() {
+		return paginateByDefault;
 	}
 	
 	

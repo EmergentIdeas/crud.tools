@@ -1,0 +1,7 @@
+<h1>Edit Placekeeper</h1>
+
+<form action="/sortingtest/__id__" method="post" class="form-horizontal" >
+	__::placekeeper/placekeeper-fields__
+	<br/>
+	<button class="btn btn-primary" type="submit">Save</button>
+</form>
