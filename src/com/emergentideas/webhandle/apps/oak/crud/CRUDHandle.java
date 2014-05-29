@@ -122,10 +122,17 @@ public abstract class CRUDHandle<T> {
 	@Template
 	@Wrap("app_page")
 	public Object sortRows(InvocationContext context, User user, String[] order, Location location) {
+		ObjectSort sort = new ObjectSort();
+		
 		int place = 0;
 		for(String itemId : order) {
 			T entity = (T)entityManager.find(getEntityClass(), transformId(itemId));
 			setOrder(entity, place++);
+			sort.getObjects().add(entity);
+		}
+		
+		if(applicationEventBus != null) {
+			applicationEventBus.emit("/object/sort", sort);
 		}
 		
 		return new DirectRespondent(null, 200, null);
