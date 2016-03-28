@@ -1,0 +1,10 @@
+<div class="sort-table">
+	<div class="sort-table-header sort-table-row">
+			__''::dataTables/cell-div__
+			__headers::dataTables/cell-div__
+			__deleteURLPrefix??''::dataTables/cell-div__
+	</div>
+	__rows::dataTables/div-table-row__	
+</div>
+__pageNumber??$this::dataTables/paging-information__
+__createNewURL::dataTables/newURLLink__

@@ -42,3 +42,15 @@ visibility: visible;
 .paging-information {
 	text-align: right;
 }
+
+div.sort-table {
+	display: table;
+}
+
+div.sort-table .sort-table-row {
+	display: table-row;
+}
+
+div.sort-table .sort-table-row .cell {
+	display: table-cell;
+}

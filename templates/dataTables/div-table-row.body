@@ -1,0 +1,8 @@
+<div class="sort-table-row sort-table-data-row">
+	<div class="cell">
+		__rowClickURL::dataTables/editIcon__
+		<span class="no-show-sort-icon"><span class="glyphicon glyphicon-resize-vertical sort-handle"></span></span>
+	</div>
+	__values::dataTables/cell-div__
+	__deleteURL::dataTables/delete-div__
+</div>

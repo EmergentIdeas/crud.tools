@@ -4,7 +4,7 @@ $(function() {
 	// script is present.
 	$('.no-show-sort-icon').removeClass('no-show-sort-icon');
 	
-	$('.sortable-tiles').sortable({
+	$('.sortable-tiles, .sort-table .sort-table-data-row').sortable({
 		handle: '.sort-handle',
 		stop: function(event, ui) {
 			var sortedOrder = [];

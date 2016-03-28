@@ -194,7 +194,7 @@ public abstract class CRUDHandle<T> {
 	 * Returns the template name to use to render a tile for the row
 	 * @return
 	 */
-	protected String getTileTemplate() {
+	public String getTileTemplate() {
 		return "dataTables/tile";
 	}
 	
@@ -202,7 +202,7 @@ public abstract class CRUDHandle<T> {
 	 * Returns the template name to use to render just the data for a given tile
 	 * @return
 	 */
-	protected String getTileDataTemplate() {
+	public String getTileDataTemplate() {
 		return "dataTables/tile-data";
 	}
 	
